@@ -1,8 +1,10 @@
 from telegram.ext import Updater, CommandHandler
+from telegram.ext.dispatcher import run_async
 import logging
 import os
 from web3 import Web3
 from dotenv import load_dotenv
+import time
 
 
 # Enable logging
@@ -17,6 +19,7 @@ load_dotenv()
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 INFURA_KEY = os.getenv('INFURA_KEY')
 VAULT_REFRESH_TIMER = os.getenv('VAULT_REFRESH_TIMER')
+CAPACITY_THRESHOLD = os.getenv('CAPACITY_THRESHOLD')
 
 ADDRESS = "0x0FABaF48Bbf864a3947bdd0Ba9d764791a60467A"
 
@@ -32,13 +35,38 @@ def get_vault_capacity():
     balance = contract.functions.totalBalance().call()
 
     capacity = (cap - balance) / 10 ** 18
+    time.sleep(0.1)
     # print(f"{capacity:.2f} eth")
-    return f"{capacity:.2f} ETH Capacity"
+    return capacity
 
 
-def start(update, context):
+def help(update, context):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Hello Ribbon Finance Vault Bot here")
+    context.bot.send_message(chat_id=chat_id, text="🎀 Hello welcome to the Ribbon Finance Vault Bot 🎀 \n\n The following commands are available - \n /help - shows available commands \n /sub - subscribes to vault capacity notifications \n\n Please enjoy")
+
+
+def getvaultcapacity(update, context):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id=chat_id, text=f"{get_vault_capacity():.2f} ETH Capacity")
+
+
+def vaultcheck(context):
+    vault_status = get_vault_capacity()
+    if vault_status > float(CAPACITY_THRESHOLD):
+        context.bot.send_message(chat_id=context.job.context, text=f"Current T-ETH-C Capacity {vault_status:.2f} ETH")
+
+
+def vaultcheck_timer(update, context):
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text='Subscribing to ETH Vault notification')
+    context.job_queue.start()
+    context.job_queue.run_repeating(vaultcheck, int(VAULT_REFRESH_TIMER), context=update.message.chat_id, first=1)
+
+
+def vaultcheck_stop(update, context):
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text='Unsubscribing from ETH Vault notification')
+    context.job_queue.stop()
 
 
 def main() -> None:
@@ -49,7 +77,12 @@ def main() -> None:
     dispatcher = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("start", help))
+    dispatcher.add_handler(CommandHandler("help", help))
+    dispatcher.add_handler(CommandHandler("getvaultcapacity", getvaultcapacity, run_async=True))
+
+    dispatcher.add_handler(CommandHandler('sub', vaultcheck_timer, run_async=True))
+    # dispatcher.add_handler(CommandHandler('unsub', vaultcheck_stop, run_async=True))
 
     # Start the Bot
     updater.start_polling()
