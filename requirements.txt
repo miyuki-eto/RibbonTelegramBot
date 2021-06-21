@@ -1,7 +1,9 @@
+aiogram==2.13
 aiohttp==3.7.4.post0
 APScheduler==3.6.3
 async-timeout==3.0.1
 attrs==21.2.0
+Babel==2.9.1
 base58==2.1.0
 bitarray==1.2.2
 cachetools==4.2.2
