@@ -4,6 +4,7 @@ import os
 from web3 import Web3
 from dotenv import load_dotenv
 import time
+import asyncio
 
 load_dotenv()
 
@@ -115,7 +116,7 @@ async def subscribe(message: types.Message):
             await message.answer(msg)
 
             # sleep then repeat command
-            time.sleep(float(VAULT_REFRESH_TIMER))
+            await asyncio.sleep(VAULT_REFRESH_TIMER)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
