@@ -86,6 +86,9 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(commands=['run'])
 async def subscribe(message: types.Message):
+    ceth_trigger = 0
+    cbtc_trigger = 0
+    peth_trigger = 0
     while True:
         # get all vault capacities
         ceth_vault_status = get_vault_capacity_ceth()
@@ -97,19 +100,31 @@ async def subscribe(message: types.Message):
 
         # if the ETH call vault capacity is above the threshold add text to message
         if ceth_vault_status > float(CETH_CAPACITY_THRESHOLD):
-            msg = msg + f"🎀 Current T-ETH-C Capacity " + '{:,.2f}'.format(ceth_vault_status) + " ETH"
+            if ceth_trigger == 0:
+                msg = msg + f"🎀 Current T-ETH-C Capacity " + '{:,.2f}'.format(ceth_vault_status) + " ETH"
+                ceth_trigger = 1
+        else:
+            ceth_trigger = 0
 
         # if the BTC call vault capacity is above the threshold add text to message
         if cbtc_vault_status > float(CBTC_CAPACITY_THRESHOLD):
-            if msg != "":
-                msg = msg + '\n'
-            msg = msg + f"🎀 Current T-WBTC-C Capacity " + '{:,.2f}'.format(cbtc_vault_status) + " BTC"
+            if cbtc_trigger == 0:
+                if msg != "":
+                    msg = msg + '\n'
+                msg = msg + f"🎀 Current T-WBTC-C Capacity " + '{:,.2f}'.format(cbtc_vault_status) + " BTC"
+                cbtc_trigger = 1
+        else:
+            cbtc_trigger = 0
 
         # if the ETH put vault capacity is above the threshold add text to message
         if peth_vault_status > float(PETH_CAPACITY_THRESHOLD):
-            if msg != "":
-                msg = msg + '\n'
-            msg = msg + f"🎀 Current T-USDC-P-ETH Capacity " + '${:,.2f}'.format(peth_vault_status) + " USDC"
+            if peth_trigger == 0:
+                if msg != "":
+                    msg = msg + '\n'
+                msg = msg + f"🎀 Current T-USDC-P-ETH Capacity " + '${:,.2f}'.format(peth_vault_status) + " USDC"
+                peth_trigger = 1
+        else:
+            peth_trigger = 0
 
         # if message is not blank send to channel
         if msg != "":
@@ -117,6 +132,7 @@ async def subscribe(message: types.Message):
 
             # sleep then repeat command
             await asyncio.sleep(VAULT_REFRESH_TIMER)
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
