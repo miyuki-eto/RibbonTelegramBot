@@ -10,10 +10,12 @@ load_dotenv()
 # import environment variables
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 INFURA_KEY = os.getenv('INFURA_KEY')
-VAULT_REFRESH_TIMER = os.getenv('VAULT_REFRESH_TIMER')
-CETH_CAPACITY_THRESHOLD = os.getenv('CETH_CAPACITY_THRESHOLD')
-CBTC_CAPACITY_THRESHOLD = os.getenv('CBTC_CAPACITY_THRESHOLD')
-PETH_CAPACITY_THRESHOLD = os.getenv('PETH_CAPACITY_THRESHOLD')
+
+# local variables
+VAULT_REFRESH_TIMER = 300
+CETH_CAPACITY_THRESHOLD = 0
+CBTC_CAPACITY_THRESHOLD = 0
+PETH_CAPACITY_THRESHOLD = 1
 
 # create web3 instance
 w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_KEY}"))
@@ -94,19 +96,19 @@ async def subscribe(message: types.Message):
 
         # if the ETH call vault capacity is above the threshold add text to message
         if ceth_vault_status > float(CETH_CAPACITY_THRESHOLD):
-            msg = msg + f"🎀 Current T-ETH-C Capacity {ceth_vault_status:.2f} ETH"
+            msg = msg + f"🎀 Current T-ETH-C Capacity " + '{:,.2f}'.format(ceth_vault_status) + " ETH"
 
         # if the BTC call vault capacity is above the threshold add text to message
         if cbtc_vault_status > float(CBTC_CAPACITY_THRESHOLD):
             if msg != "":
                 msg = msg + '\n'
-            msg = msg + f"🎀 Current T-WBTC-C Capacity {cbtc_vault_status:.2f} BTC"
+            msg = msg + f"🎀 Current T-WBTC-C Capacity " + '{:,.2f}'.format(cbtc_vault_status) + " BTC"
 
         # if the ETH put vault capacity is above the threshold add text to message
         if peth_vault_status > float(PETH_CAPACITY_THRESHOLD):
             if msg != "":
                 msg = msg + '\n'
-            msg = msg + f"🎀 Current T-USDC-P-ETH Capacity {peth_vault_status:.2f} USDC"
+            msg = msg + f"🎀 Current T-USDC-P-ETH Capacity " + '${:,.2f}'.format(peth_vault_status) + " USDC"
 
         # if message is not blank send to channel
         if msg != "":
